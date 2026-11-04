@@ -1,0 +1,756 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/auth.php';
+requireAdmin();
+
+require_once __DIR__ . '/../config/database.php';
+
+if (empty($_SESSION['admin_csrf_token'])) {
+    $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$error = '';
+
+// Produkte aktivieren oder deaktivieren.
+// Produkte werden nicht endgültig gelöscht, damit Bestellhistorien
+// erhalten bleiben.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyAdminCsrfToken($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        exit('Ungültige Anfrage. Bitte lade die Seite neu.');
+    }
+
+    $productId = filter_var(
+        $_POST['product_id'] ?? null,
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    $action = $_POST['action'] ?? '';
+
+    if ($productId === false || !in_array($action, ['activate', 'deactivate'], true)) {
+        $error = 'Die Anfrage enthält ungültige Daten.';
+    } else {
+        $active = $action === 'activate' ? 1 : 0;
+
+        $stmt = $pdo->prepare(
+            'UPDATE products SET active = ? WHERE id = ?'
+        );
+        $stmt->execute([$active, $productId]);
+
+        header('Location: products.php?updated=1');
+        exit;
+    }
+}
+
+$stmt = $pdo->query(
+    'SELECT id, name, price, active
+     FROM products
+     ORDER BY id DESC'
+);
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+function productEscape(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+?>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Produktverwaltung – Software-Shop</title>
+    <link rel="stylesheet" href="../assets/css/products.css">
+</head>
+<body class="admin-page">
+
+<header class="admin-header">
+    <a class="admin-brand" href="dashboard.php">Software-Shop Admin</a>
+
+    <nav class="admin-nav" aria-label="Admin-Navigation">
+        <a href="dashboard.php">Dashboard</a>
+        <a href="products.php" aria-current="page">Produkte</a>
+        <a href="orders.php">Bestellungen</a>
+
+        <form action="logout.php" method="POST" class="admin-logout-form">
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= productEscape(adminCsrfToken()) ?>"
+            >
+            <button type="submit" class="admin-logout-button">
+                Abmelden
+            </button>
+        </form>
+    </nav>
+</header>
+
+<main class="admin-dashboard">
+    <section class="admin-welcome">
+        <p class="admin-eyebrow">SHOP-VERWALTUNG</p>
+        <h1>Produktverwaltung</h1>
+        <p>Hier kannst du deine Software-Produkte verwalten.</p>
+    </section>
+
+    <section class="admin-panel">
+        <div class="admin-panel-heading">
+            <div>
+                <h2>Alle Produkte</h2>
+                <p><?= count($products) ?> Produkte in der Datenbank</p>
+            </div>
+
+            <a class="admin-action-link" href="product_create.php">
+                + Produkt hinzufügen
+            </a>
+        </div>
+
+    <?php if (isset($_GET['created'])): ?>
+         <p class="admin-success">Das Produkt wurde erfolgreich erstellt.</p>
+    <?php endif; ?>
+
+<?php if (isset($_GET['updated'])): ?>
+    <p class="admin-success">Die Änderung wurde erfolgreich gespeichert.</p>
+<?php endif; ?>
+
+        <?php if ($error !== ''): ?>
+            <p class="admin-error">
+                <?= productEscape($error) ?>
+            </p>
+        <?php endif; ?>
+
+        <?php if (empty($products)): ?>
+            <p>Es sind noch keine Produkte vorhanden.</p>
+        <?php else: ?>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Produkt</th>
+                        <th>Preis</th>
+                        <th>Status</th>
+                        <th>Aktionen</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($products as $product): ?>
+                        <tr>
+                            <td>#<?= (int) $product['id'] ?></td>
+                            <td>
+                                <strong>
+                                    <?= productEscape($product['name']) ?>
+                                </strong>
+                            </td>
+                            <td>
+                                <?= number_format(
+                                    (float) $product['price'],
+                                    2,
+                                    ',',
+                                    '.'
+                                ) ?> €
+                            </td>
+                            <td>
+                                <?php if ((int) $product['active'] === 1): ?>
+                                    <span class="admin-status admin-status-active">
+                                        Aktiv
+                                    </span>
+                                <?php else: ?>
+                                    <span class="admin-status admin-status-inactive">
+                                        Deaktiviert
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a
+                                        class="admin-small-button"
+                                        href="product_edit.php?id=<?= (int) $product['id'] ?>"
+                                    >Bearbeiten</a>
+
+                                    <form method="POST" action="products.php">
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="<?= productEscape(adminCsrfToken()) ?>"
+                                        >
+                                        <input
+                                            type="hidden"
+                                            name="product_id"
+                                            value="<?= (int) $product['id'] ?>"
+                                        >
+
+                                        <?php if ((int) $product['active'] === 1): ?>
+                                            <button
+                                                class="admin-small-button admin-button-danger"
+                                                type="submit"
+                                                name="action"
+                                                value="deactivate"
+                                            >Deaktivieren</button>
+                                        <?php else: ?>
+                                            <button
+                                                class="admin-small-button admin-button-success"
+                                                type="submit"
+                                                name="action"
+                                                value="activate"
+                                            >Aktivieren</button>
+                                        <?php endif; ?>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <p><a href="../index.php">← Zurück zum öffentlichen Shop</a></p>
+</main>
+<style>
+
+
+
+
+/* ==========================================
+   ADMIN HEADER – EINHEITLICHES DESIGN
+   ========================================== */
+
+.admin-page .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    width: 100%;
+    min-height: 76px;
+    box-sizing: border-box;
+    padding: 0 5%;
+
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* Shop-Name links */
+.admin-page .admin-brand {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+
+    color: #111827;
+    font-size: 21px;
+    font-weight: 750;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+}
+
+.admin-page .admin-brand:hover {
+    color: #4f46e5;
+}
+
+/* Navigation rechts */
+.admin-page .admin-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+
+    margin: 0;
+    padding: 0;
+}
+
+/* Navigationslinks */
+.admin-page .admin-nav > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 0 15px;
+
+    color: #4b5563;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+/* Hover-Effekt */
+.admin-page .admin-nav > a:hover {
+    color: #4338ca;
+    background: #f3f4ff;
+}
+
+/* Aktuelle Seite */
+.admin-page .admin-nav > a[aria-current="page"] {
+    color: #4338ca;
+    background: #eef2ff;
+    border-color: #e0e7ff;
+}
+
+/* Abmeldeformular */
+.admin-page .admin-logout-form {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin: 0 0 0 8px;
+}
+
+/* Abmelden-Button */
+.admin-page .admin-logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 40px;
+    padding: 0 16px;
+
+    color: #b42318;
+    background: #ffffff;
+    border: 1px solid #fecdca;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.admin-page .admin-logout-button:hover {
+    color: #912018;
+    background: #fef3f2;
+    border-color: #fda29b;
+}
+
+/* Tastaturbedienung */
+.admin-page .admin-nav a:focus-visible,
+.admin-page .admin-logout-button:focus-visible {
+    outline: 3px solid #a5b4fc;
+    outline-offset: 3px;
+}
+
+/* Tablet */
+@media (max-width: 850px) {
+    .admin-page .admin-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px 24px;
+    }
+
+    .admin-page .admin-nav {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .admin-page .admin-logout-form {
+        margin-left: 0;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 480px) {
+    .admin-page .admin-header {
+        padding: 18px 16px;
+    }
+
+    .admin-page .admin-brand {
+        font-size: 19px;
+    }
+
+    .admin-page .admin-nav {
+        gap: 6px;
+    }
+
+    .admin-page .admin-nav > a {
+        min-height: 38px;
+        padding: 0 10px;
+        font-size: 13px;
+    }
+
+    .admin-page .admin-logout-button {
+        min-height: 38px;
+        padding: 0 11px;
+        font-size: 13px;
+    }
+}
+
+
+
+
+
+/* ==========================================
+   ADMIN – PRODUKTVERWALTUNG
+   Einheitliches Design mit dem Dashboard
+   ========================================== */
+
+.admin-page {
+    background: #f5f7fb;
+    color: #1f2937;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Hauptinhalt */
+.admin-page .admin-dashboard {
+    width: calc(100% - 48px);
+    max-width: 1200px;
+    margin: 36px auto;
+}
+
+/* Seitentitel */
+.admin-page .admin-welcome {
+    margin-bottom: 28px;
+}
+
+.admin-page .admin-eyebrow {
+    margin-bottom: 8px;
+    color: #4f46e5;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.admin-page .admin-welcome h1 {
+    margin: 0 0 10px;
+    color: #111827;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.admin-page .admin-welcome > p:last-child {
+    margin: 0;
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* Hauptkarte */
+.admin-page .admin-panel {
+    margin-bottom: 24px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+/* Kopfbereich der Karte */
+.admin-page .admin-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-page .admin-panel-heading h2 {
+    margin: 0 0 7px;
+    color: #111827;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.admin-page .admin-panel-heading p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Primärer Button */
+.admin-page .admin-action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 11px 16px;
+    border: 1px solid #4f46e5;
+    border-radius: 8px;
+    background: #4f46e5;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.admin-page .admin-action-link:hover {
+    background: #4338ca;
+    border-color: #4338ca;
+}
+
+/* Tabelle */
+.admin-page .admin-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.admin-page .admin-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background: #ffffff;
+    text-align: left;
+}
+
+.admin-page .admin-table thead {
+    background: #f9fafb;
+}
+
+.admin-page .admin-table th {
+    padding: 15px 20px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-page .admin-table td {
+    padding: 17px 20px;
+    color: #374151;
+    font-size: 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.admin-page .admin-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.admin-page .admin-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.admin-page .admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-page .admin-table td strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+.admin-page .admin-table td:first-child {
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.admin-page .admin-table td:nth-child(3) {
+    color: #111827;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Produktstatus */
+.admin-page .admin-status {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.admin-page .admin-status-active {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.admin-page .admin-status-inactive {
+    background: #fef3f2;
+    color: #b42318;
+}
+
+/* Aktionsbuttons */
+.admin-page .admin-row-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-page .admin-row-actions form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.admin-page .admin-small-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #374151;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-page .admin-small-button:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+/* Deaktivieren */
+.admin-page .admin-small-button.admin-button-danger {
+    background: #ffffff;
+    color: #b42318;
+    border-color: #fecdca;
+}
+
+.admin-page .admin-small-button.admin-button-danger:hover {
+    background: #fef3f2;
+    border-color: #fda29b;
+}
+
+/* Aktivieren */
+.admin-page .admin-small-button.admin-button-success {
+    background: #ffffff;
+    color: #027a48;
+    border-color: #abefc6;
+}
+
+.admin-page .admin-small-button.admin-button-success:hover {
+    background: #ecfdf3;
+    border-color: #75e0a7;
+}
+
+/* Fokus für Tastaturbedienung */
+.admin-page .admin-action-link:focus-visible,
+.admin-page .admin-small-button:focus-visible {
+    outline: 3px solid #a5b4fc;
+    outline-offset: 2px;
+}
+
+/* Erfolgsmeldungen und Fehlermeldungen */
+.admin-page .admin-panel .admin-success,
+.admin-page .admin-panel .admin-error {
+    margin: 20px 24px 0;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.admin-page .admin-panel .admin-success {
+    color: #027a48;
+    background: #ecfdf3;
+    border: 1px solid #abefc6;
+}
+
+.admin-page .admin-panel .admin-error {
+    color: #b42318;
+    background: #fef3f2;
+    border: 1px solid #fecdca;
+}
+
+/* Zurück-Link */
+.admin-page .admin-dashboard > p:last-child {
+    margin-top: 24px;
+}
+
+.admin-page .admin-dashboard > p:last-child a {
+    color: #4f46e5;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-page .admin-dashboard > p:last-child a:hover {
+    color: #3730a3;
+    text-decoration: underline;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+    .admin-page .admin-dashboard {
+        width: calc(100% - 32px);
+        margin: 28px auto;
+    }
+
+    .admin-page .admin-table th,
+    .admin-page .admin-table td {
+        padding: 14px;
+    }
+
+    .admin-page .admin-row-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-page .admin-row-actions form {
+        width: 100%;
+    }
+
+    .admin-page .admin-row-actions .admin-small-button {
+        width: 100%;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 600px) {
+    .admin-page .admin-dashboard {
+        width: calc(100% - 24px);
+        margin: 22px auto;
+    }
+
+    .admin-page .admin-welcome h1 {
+        font-size: 25px;
+    }
+
+    .admin-page .admin-panel-heading {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    .admin-page .admin-action-link {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .admin-page .admin-table {
+        min-width: 700px;
+    }
+}
+
+</style>
+</body>
+</html>

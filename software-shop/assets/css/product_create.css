@@ -1,0 +1,482 @@
+
+/* ==========================================
+   ADMIN – PRODUKT HINZUFÜGEN
+   Einheitliches Design für das Formular
+   ========================================== */
+
+/* Formular-Karte */
+.admin-page .admin-form-card {
+    width: 100%;
+    max-width: 760px;
+    box-sizing: border-box;
+    margin: 0 auto 30px;
+    padding: 32px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+/* Formular-Grundstruktur */
+.admin-page .admin-form-card form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+/* Beschriftungen */
+.admin-page .admin-form-card form > label:not(.admin-checkbox-label) {
+    margin-top: 10px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Texteingabe und Preisfeld */
+.admin-page .admin-form-card input[type="text"],
+.admin-page .admin-form-card input[type="number"] {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    padding: 11px 13px;
+
+    color: #111827;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* Platzhalter */
+.admin-page .admin-form-card input::placeholder {
+    color: #9ca3af;
+}
+
+/* Fokus beim Eingeben */
+.admin-page .admin-form-card input[type="text"]:focus,
+.admin-page .admin-form-card input[type="number"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+}
+
+/* Hilfetext unter dem Preisfeld */
+.admin-page .admin-form-card form > small {
+    margin-top: -3px;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Checkbox-Bereich */
+.admin-page .admin-form-card .admin-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin-top: 18px;
+    padding: 16px;
+
+    color: #374151;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+/* Checkbox selbst */
+.admin-page .admin-form-card .admin-checkbox-label input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    margin: 1px 0 0;
+    accent-color: #4f46e5;
+    cursor: pointer;
+}
+
+/* Aktionsbereich */
+.admin-page .admin-form-card .admin-form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Speichern-Button */
+.admin-page .admin-form-card .admin-action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 11px 20px;
+
+    color: #ffffff;
+    background: #4f46e5;
+    border: 1px solid #4f46e5;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.admin-page .admin-form-card .admin-action-link:hover {
+    color: #ffffff;
+    background: #4338ca;
+    border-color: #4338ca;
+}
+
+/* Abbrechen-Link */
+.admin-page .admin-form-card .admin-cancel-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 11px 18px;
+
+    color: #4b5563;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.admin-page .admin-form-card .admin-cancel-link:hover {
+    color: #111827;
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+/* Fehleranzeige */
+.admin-page .admin-form-card .admin-error {
+    margin: 0 0 18px;
+    padding: 13px 15px;
+
+    color: #b42318;
+    background: #fef3f2;
+    border: 1px solid #fecdca;
+    border-radius: 8px;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Tastaturbedienung */
+.admin-page .admin-form-card button:focus-visible,
+.admin-page .admin-form-card a:focus-visible,
+.admin-page .admin-form-card input:focus-visible {
+    outline: 3px solid #a5b4fc;
+    outline-offset: 3px;
+}
+
+/* Tablet */
+@media (max-width: 760px) {
+    .admin-page .admin-form-card {
+        padding: 24px;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 480px) {
+    .admin-page .admin-dashboard {
+        width: calc(100% - 24px);
+        margin: 22px auto;
+    }
+
+    .admin-page .admin-welcome h1 {
+        font-size: 25px;
+    }
+
+    .admin-page .admin-form-card {
+        padding: 18px;
+    }
+
+    .admin-page .admin-form-card .admin-form-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-page .admin-form-card .admin-action-link,
+    .admin-page .admin-form-card .admin-cancel-link {
+        width: 100%;
+    }
+}
+
+
+
+
+
+
+/* ==========================================
+   PRODUCT CREATE – HEADER UND SEITENKOPF
+   ========================================== */
+
+/* Gesamte Seite */
+.admin-page {
+    min-height: 100vh;
+    margin: 0;
+    background: #f5f7fb;
+    color: #1f2937;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Obere Navigationsleiste */
+.admin-page .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+
+    width: 100%;
+    min-height: 76px;
+    box-sizing: border-box;
+    padding: 14px 5%;
+
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* Shop-Name */
+.admin-page .admin-brand {
+    flex-shrink: 0;
+    color: #111827;
+    font-size: 21px;
+    font-weight: 750;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.admin-page .admin-brand:hover {
+    color: #4f46e5;
+}
+
+/* Navigation */
+.admin-page .admin-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Navigationseinträge */
+.admin-page .admin-nav > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 0 15px;
+
+    color: #4b5563;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+/* Hover-Effekt */
+.admin-page .admin-nav > a:hover {
+    color: #4338ca;
+    background: #f3f4ff;
+}
+
+/* Aktiver Menüpunkt */
+.admin-page .admin-nav > a[aria-current="page"] {
+    color: #4338ca;
+    background: #eef2ff;
+    border-color: #e0e7ff;
+}
+
+/* Abmeldeformular */
+.admin-page .admin-logout-form {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin: 0 0 0 8px;
+}
+
+/* Abmelden-Button */
+.admin-page .admin-logout-button {
+    min-height: 40px;
+    padding: 0 16px;
+
+    color: #b42318;
+    background: #ffffff;
+    border: 1px solid #fecdca;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.admin-page .admin-logout-button:hover {
+    color: #912018;
+    background: #fef3f2;
+    border-color: #fda29b;
+}
+
+/* Hauptinhalt */
+.admin-page .admin-dashboard {
+    width: calc(100% - 48px);
+    max-width: 1200px;
+    box-sizing: border-box;
+    margin: 38px auto;
+}
+
+/* Überschriftenbereich */
+.admin-page .admin-welcome {
+    margin-bottom: 30px;
+}
+
+/* Kleine obere Kennzeichnung */
+.admin-page .admin-welcome .admin-eyebrow {
+    margin: 0 0 10px;
+    color: #4f46e5;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+/* Hauptüberschrift */
+.admin-page .admin-welcome h1 {
+    margin: 0 0 10px;
+    color: #111827;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+/* Beschreibung */
+.admin-page .admin-welcome > p:last-child {
+    margin: 0;
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+/* Tastaturfokus */
+.admin-page .admin-nav a:focus-visible,
+.admin-page .admin-logout-button:focus-visible,
+.admin-page .admin-brand:focus-visible {
+    outline: 3px solid #a5b4fc;
+    outline-offset: 3px;
+}
+
+/* Tablet */
+@media (max-width: 850px) {
+    .admin-page .admin-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px 24px;
+    }
+
+    .admin-page .admin-nav {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .admin-page .admin-logout-form {
+        margin-left: 0;
+    }
+
+    .admin-page .admin-dashboard {
+        width: calc(100% - 32px);
+        margin: 28px auto;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 480px) {
+    .admin-page .admin-header {
+        padding: 18px 16px;
+    }
+
+    .admin-page .admin-brand {
+        font-size: 19px;
+    }
+
+    .admin-page .admin-nav {
+        gap: 5px;
+    }
+
+    .admin-page .admin-nav > a {
+        min-height: 38px;
+        padding: 0 10px;
+        font-size: 13px;
+    }
+
+    .admin-page .admin-logout-button {
+        min-height: 38px;
+        padding: 0 11px;
+        font-size: 13px;
+    }
+
+    .admin-page .admin-dashboard {
+        width: calc(100% - 24px);
+        margin: 24px auto;
+    }
+
+    .admin-page .admin-welcome h1 {
+        font-size: 25px;
+    }
+}
+
