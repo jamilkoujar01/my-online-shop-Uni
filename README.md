@@ -65,7 +65,7 @@ Nach der Installation das XAMPP Control Panel öffnen und folgende Dienste start
 Das Repository kann über Git geklont werden:
 
 ```bash
-git clone https://github.com/jamilkoujar01/http-software-shop-.git
+https://github.com/jamilkoujar01/my-online-shop-Uni
 ```
 
 Alternativ kann das Projekt über GitHub als ZIP-Datei heruntergeladen werden.
