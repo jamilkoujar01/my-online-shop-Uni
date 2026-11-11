@@ -91,7 +91,7 @@ C:\xampp\htdocs\software-shop\
 
 Die lokale Datenbankverbindung wird in der Konfigurationsdatei des Projekts eingerichtet.
 
-Falls eine Beispieldatei wie `config/database.example.php` vorhanden ist, kann diese als Vorlage verwendet werden.
+Eine Beispieldatei wie `config/database.php` vorhanden ist, kann diese als Vorlage verwendet werden.
 
 Die lokale Konfigurationsdatei muss die passenden Verbindungsdaten enthalten:
 
